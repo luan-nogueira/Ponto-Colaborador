@@ -73,7 +73,7 @@ export function useAuth(options?: UseAuthOptions) {
           }
         } catch (err: any) {
           console.error("Erro ao buscar perfil do usuário:", err);
-          toast.error("Erro crítico de permissão! Verifique as regras do Firestore Database.");
+          toast.error(`Erro Firestore: ${err.message}`);
           setError(err);
         }
       } else {
