@@ -72,14 +72,16 @@ export function useAuth(options?: UseAuthOptions) {
             });
           }
         } catch (err: any) {
-          console.error("Erro ao buscar perfil do usuário:", err);
+          console.error("Erro crítico ao buscar perfil do usuário:", err);
           toast.error(`Erro Firestore: ${err.message}`);
           setError(err);
+        } finally {
+          setLoading(false);
         }
       } else {
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
