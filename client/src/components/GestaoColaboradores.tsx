@@ -39,7 +39,7 @@ export default function GestaoColaboradores() {
     try {
       const novoRole = isAtualmenteGestor ? "colaborador" : "gestor";
       await updateDoc(doc(db, "users", id), { role: novoRole });
-      toast.success(\`Permissão atualizada para \${novoRole}\`);
+      toast.success(`Permissão atualizada para ${novoRole}`);
       carregarColaboradores();
     } catch (error) {
       toast.error("Erro ao atualizar permissão");
