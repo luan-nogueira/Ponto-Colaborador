@@ -2,8 +2,7 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getLoginUrl } from "@/const";
-
+// No getLoginUrl imported
 type UserRole = "admin" | "gestor" | "colaborador";
 
 interface UserProfile {
@@ -23,7 +22,7 @@ type UseAuthOptions = {
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  const { redirectOnUnauthenticated = false, redirectPath = getLoginUrl() } =
+  const { redirectOnUnauthenticated = false, redirectPath = "/login" } =
     options ?? {};
 
   const [fbUser, setFbUser] = useState<FirebaseUser | null>(null);

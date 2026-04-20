@@ -1,7 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { getLoginUrl } from "@/const";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,7 +13,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      setLocation(getLoginUrl());
+      setLocation("/login");
     }
   }, [isAuthenticated, loading, setLocation]);
 
