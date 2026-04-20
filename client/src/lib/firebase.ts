@@ -19,7 +19,7 @@ const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
 const auth = getAuth(app);
 const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
-});
+}, "default");
 const googleProvider = new GoogleAuthProvider();
 
 export { app, auth, db, analytics, googleProvider };
