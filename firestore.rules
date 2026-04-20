@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Função utilitária para checar se o usuário está logado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Função para checar se o usuário é gestor
+    // (Presumindo que teremos um campo "role": "gestor" ou "admin" na coleção users)
+    function isGestor() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'gestor';
+    }
+
+    // Regras para a Coleção de Usuários
+    match /users/{userId} {
+      // Qualquer usuário autenticado pode ler a lista de usuários (necessário para o Dashboard)
+      allow read: if isAuthenticated();
+      // Apenas o próprio usuário ou gestores podem atualizar seus dados
+      allow write: if isGestor() || request.auth.uid == userId;
+    }
+
+    // Regras para a Coleção de Pontos
+    match /pontos/{pontoId} {
+      // Usuário pode ler seus próprios pontos, gestor pode ler todos os pontos
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      // O usuário SÓ PODE CRIAR pontos atrelados ao seu próprio UID (não pode criar em nome de outro)
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // Apenas gestor pode editar ou deletar pontos já registrados
+      allow update, delete: if isGestor();
+    }
+    
+    // Regras para a Coleção de Justificativas
+    match /justificativas/{justificativaId} {
+      // Usuário pode ler suas próprias, gestor pode ler todas
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      // Usuário pode criar a justificativa atrelada ao seu UID
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // Apenas gestor pode aprovar (modificando status) ou rejeitar justificativas
+      allow update: if isGestor();
+      allow delete: if isGestor();
+    }
+
+    // Regras para Configurações da Empresa
+    match /configuracoes/{configId} {
+      // Todos podem ler as configurações (ex: horário, tolerâncias...)
+      allow read: if isAuthenticated();
+      // Somente gestores podem alterar as configurações
+      allow write: if isGestor();
+    }
+  }
+}

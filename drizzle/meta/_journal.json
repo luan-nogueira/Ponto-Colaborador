@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776684982517,
+      "tag": "0000_stiff_xorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776685175947,
+      "tag": "0001_low_doctor_octopus",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776685230075,
+      "tag": "0002_perpetual_crystal",
+      "breakpoints": true
+    }
+  ]
+}
