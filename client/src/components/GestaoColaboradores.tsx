@@ -1,15 +1,50 @@
-import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Loader2, Search, Filter } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { toast } from "sonner";
 import { Loader2, Search, Filter } from "lucide-react";
 
 export default function GestaoColaboradores() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroSetor, setFiltroSetor] = useState<string>("");
 
-  const { data: colaboradores, isLoading } = trpc.usuarios.getColaboradores.useQuery();
+  const [colaboradores, setColaboradores] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const carregarColaboradores = async () => {
+    try {
+      setIsLoading(true);
+      const querySnapshot = await getDocs(collection(db, "users"));
+      const lista: any[] = [];
+      querySnapshot.forEach((doc) => {
+        lista.push({ id: doc.id, ...doc.data() });
+      });
+      setColaboradores(lista);
+    } catch (error) {
+      console.error("Erro ao buscar colaboradores:", error);
+      toast.error("Erro ao carregar colaboradores");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarColaboradores();
+  }, []);
+
+  const alternarStatusGestor = async (id: string, isAtualmenteGestor: boolean) => {
+    try {
+      const novoRole = isAtualmenteGestor ? "colaborador" : "gestor";
+      await updateDoc(doc(db, "users", id), { role: novoRole });
+      toast.success(\`Permissão atualizada para \${novoRole}\`);
+      carregarColaboradores();
+    } catch (error) {
+      toast.error("Erro ao atualizar permissão");
+    }
+  };
   const filtrados = colaboradores?.filter((col) => {
     const matchSearch =
       col.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,7 +131,7 @@ export default function GestaoColaboradores() {
                     Setor
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
-                    Status
+                    Nível de Acesso
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                     Ações
@@ -143,8 +178,9 @@ export default function GestaoColaboradores() {
                             size="sm"
                             variant="outline"
                             className="text-xs text-blue-600 hover:text-blue-700"
+                            onClick={() => alternarStatusGestor(colaborador.id, colaborador.role === "gestor")}
                           >
-                            Ver Registros
+                            {colaborador.role === "gestor" ? "Remover Gestor" : "Promover a Gestor"}
                           </Button>
                         </div>
                       </td>
