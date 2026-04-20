@@ -17,9 +17,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
 const auth = getAuth(app);
+
+// Use 'default' (without parentheses) as database ID if (default) is not found
+// In many modern projects the ID might be 'default' instead of '(default)'
 const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
-});
+}, "default"); 
+
 const googleProvider = new GoogleAuthProvider();
 
 export { app, auth, db, analytics, googleProvider };
