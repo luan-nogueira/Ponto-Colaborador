@@ -1,6 +1,7 @@
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 // No getLoginUrl imported
 type UserRole = "admin" | "gestor" | "colaborador";
@@ -50,16 +51,29 @@ export function useAuth(options?: UseAuthOptions) {
               numeroMatricula: data.numeroMatricula
             });
           } else {
+            console.log("Usuário novo detectado. Criando no Firestore...");
+            const newProfile = {
+              uid: user.uid,
+              name: user.displayName || "Usuário",
+              email: user.email || "",
+              role: "colaborador" as UserRole,
+              createdAt: new Date().toISOString()
+            };
+            
+            try {
+               await setDoc(doc(db, "users", user.uid), newProfile);
+            } catch (createErr) {
+               console.warn("Não foi possível criar documento do usuário, usando apenas Auth", createErr);
+            }
+
             setProfile({
               id: user.uid,
-              uid: user.uid,
-              name: user.displayName,
-              email: user.email,
-              role: "colaborador" 
+              ...newProfile
             });
           }
         } catch (err: any) {
           console.error("Erro ao buscar perfil do usuário:", err);
+          toast.error("Erro crítico de permissão! Verifique as regras do Firestore Database.");
           setError(err);
         }
       } else {
