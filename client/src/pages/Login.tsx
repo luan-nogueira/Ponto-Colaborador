@@ -56,6 +56,9 @@ export default function Login() {
             <p className="text-xs text-slate-500 text-center mt-4">
               Seu login é seguro e protegido pelo Firebase
             </p>
+            <p className="text-[10px] text-slate-600 text-center mt-2 opacity-30">
+              Build: 14:35 | DB: standard-proxy
+            </p>
           </CardContent>
         </Card>
 

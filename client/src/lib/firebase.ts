@@ -13,6 +13,9 @@ const firebaseConfig = {
   measurementId: "G-F54Y68RLRW"
 };
 
+console.log("Firebase Init - Project:", firebaseConfig.projectId, "AuthDomain:", firebaseConfig.authDomain);
+console.log("Firebase Init - Database: default (ver: 1.0.1)");
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
