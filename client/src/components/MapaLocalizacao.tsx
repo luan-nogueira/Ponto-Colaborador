@@ -25,8 +25,8 @@ export default function MapaLocalizacao() {
         .map(doc => ({
           id: doc.id,
           ...doc.data(),
-          dataRegistro: doc.data().timestamp?.toDate() || new Date()
-        }))
+          dataRegistro: (doc.data() as any).timestamp?.toDate() || new Date()
+        } as any))
         .filter(r => r.latitude && r.longitude);
       
       setRegistros(data);

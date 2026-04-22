@@ -210,9 +210,9 @@ export const resumoMensal = mysqlTable("resumo_mensal", {
   saidasAntecipadas: int("saidas_antecipadas").default(0),
   
   // Horas
-  horasTrabalhadas: decimal("horas_trabalhadas", { precision: 8, scale: 2 }).default(0),
-  horasExtras: decimal("horas_extras", { precision: 8, scale: 2 }).default(0),
-  horasIntervalo: decimal("horas_intervalo", { precision: 8, scale: 2 }).default(0),
+  horasTrabalhadas: decimal("horas_trabalhadas", { precision: 8, scale: 2 }).default("0"),
+  horasExtras: decimal("horas_extras", { precision: 8, scale: 2 }).default("0"),
+  horasIntervalo: decimal("horas_intervalo", { precision: 8, scale: 2 }).default("0"),
   
   criadoEm: timestamp("criado_em").defaultNow().notNull(),
   atualizadoEm: timestamp("atualizado_em").defaultNow().onUpdateNow().notNull(),

@@ -52,8 +52,8 @@ export default function Relatorios() {
       let rows = snap.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        dataRegistro: doc.data().timestamp?.toDate() || new Date()
-      }));
+        dataRegistro: (doc.data() as any).timestamp?.toDate() || new Date()
+      } as any));
 
       // Filtro de usuário (feito no cliente para evitar índices compostos excessivos por agora)
       if (filtros.usuarioId) {

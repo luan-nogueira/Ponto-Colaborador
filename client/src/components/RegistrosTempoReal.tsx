@@ -1,23 +1,42 @@
-import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, query, orderBy, limit as firestoreLimit, onSnapshot, doc, getDoc } from "firebase/firestore";
 
-export default function RegistrosTempoReal() {
-  const { data: registros, isLoading, refetch } = trpc.ponto.getRegistrosRecentes.useQuery();
-  const [autoRefresh, setAutoRefresh] = useState(true);
+export default function RegistrosTempoReal({ limit = 10 }: { limit?: number }) {
+  const [registros, setRegistros] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Auto-refresh a cada 30 segundos
   useEffect(() => {
-    if (!autoRefresh) return;
+    const q = query(
+      collection(db, "pontos"),
+      orderBy("timestamp", "desc"),
+      firestoreLimit(limit)
+    );
 
-    const interval = setInterval(() => {
-      refetch();
-    }, 30000);
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      setIsLoading(true);
+      try {
+        const docs = await Promise.all(snapshot.docs.map(async (docSnapshot) => {
+          const data = docSnapshot.data();
+          const userSnap = await getDoc(doc(db, "users", data.userId));
+          return {
+            id: docSnapshot.id,
+            ...data,
+            usuario: userSnap.exists() ? userSnap.data() : { name: "Desconhecido" }
+          };
+        }));
+        setRegistros(docs);
+      } catch (error) {
+        console.error("Erro ao carregar registros em tempo real:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    });
 
-    return () => clearInterval(interval);
-  }, [autoRefresh, refetch]);
+    return () => unsubscribe();
+  }, [limit]);
 
   const getTipoInfo = (tipo: string) => {
     const info: Record<string, { icon: string; cor: string; label: string }> = {
@@ -38,27 +57,10 @@ export default function RegistrosTempoReal() {
             Últimos registros de ponto dos colaboradores
           </CardDescription>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => refetch()}
-            size="sm"
-            variant="outline"
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
-          <Button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            size="sm"
-            variant={autoRefresh ? "default" : "outline"}
-          >
-            {autoRefresh ? "Auto" : "Manual"}
-          </Button>
-        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {isLoading && registros === undefined ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
             </div>

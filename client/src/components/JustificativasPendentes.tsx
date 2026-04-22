@@ -1,45 +1,66 @@
-import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 
-export default function JustificativasPendentes() {
-  const { data: justificativas, isLoading, refetch } = trpc.justificativas.getPendentes.useQuery();
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+export default function JustificativasPendentes({ limit }: { limit?: number }) {
+  const [justificativas, setJustificativas] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [comentario, setComentario] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const aprovarMutation = trpc.justificativas.aprovar.useMutation();
-  const rejeitarMutation = trpc.justificativas.rejeitar.useMutation();
+  useEffect(() => {
+    const q = query(
+      collection(db, "justificativas"),
+      where("status", "==", "pendente")
+    );
 
-  const handleAprovar = async (id: number) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      setIsLoading(true);
+      try {
+        const docs = await Promise.all(snapshot.docs.map(async (docSnapshot) => {
+          const data = docSnapshot.data();
+          // Buscar dados do usuário associado
+          const userSnap = await getDoc(doc(db, "users", data.userId));
+          return {
+            id: docSnapshot.id,
+            ...data,
+            usuario: userSnap.exists() ? userSnap.data() : { name: "Desconhecido" }
+          };
+        }));
+        
+        let result = docs;
+        if (limit) result = docs.slice(0, limit);
+        setJustificativas(result);
+      } catch (error) {
+        console.error("Erro ao processar justificativas:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [limit]);
+
+  const handleAnalise = async (id: string, novoStatus: "aprovado" | "rejeitado") => {
     try {
-      await aprovarMutation.mutateAsync({
-        id,
-        comentario,
+      setIsProcessing(true);
+      await updateDoc(doc(db, "justificativas", id), {
+        status: novoStatus,
+        comentarioGestor: comentario,
+        analisadoEm: new Date(),
       });
-      toast.success("Justificativa aprovada!");
+      toast.success(`Justificativa ${novoStatus === 'aprovado' ? 'aprovada' : 'rejeitada'}!`);
       setComentario("");
       setExpandedId(null);
-      refetch();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao aprovar");
-    }
-  };
-
-  const handleRejeitar = async (id: number) => {
-    try {
-      await rejeitarMutation.mutateAsync({
-        id,
-        comentario,
-      });
-      toast.success("Justificativa rejeitada!");
-      setComentario("");
-      setExpandedId(null);
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao rejeitar");
+      toast.error("Erro ao processar: " + error.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -106,11 +127,11 @@ export default function JustificativasPendentes() {
                     />
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => handleAprovar(just.id)}
-                        disabled={aprovarMutation.isPending}
+                        onClick={() => handleAnalise(just.id, "aprovado")}
+                        disabled={isProcessing}
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
-                        {aprovarMutation.isPending ? (
+                        {isProcessing ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         ) : (
                           <CheckCircle className="w-4 h-4 mr-2" />
@@ -118,11 +139,11 @@ export default function JustificativasPendentes() {
                         Aprovar
                       </Button>
                       <Button
-                        onClick={() => handleRejeitar(just.id)}
-                        disabled={rejeitarMutation.isPending}
+                        onClick={() => handleAnalise(just.id, "rejeitado")}
+                        disabled={isProcessing}
                         className="flex-1 bg-red-600 hover:bg-red-700"
                       >
-                        {rejeitarMutation.isPending ? (
+                        {isProcessing ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         ) : (
                           <XCircle className="w-4 h-4 mr-2" />

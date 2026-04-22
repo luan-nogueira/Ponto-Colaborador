@@ -5,7 +5,6 @@ import { Loader2, Search, Filter } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
-import { Loader2, Search, Filter } from "lucide-react";
 
 export default function GestaoColaboradores() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +52,7 @@ export default function GestaoColaboradores() {
     return matchSearch && matchSetor;
   }) || [];
 
-  const setores = [...new Set(colaboradores?.map((c) => c.setor).filter(Boolean))];
+  const setores = Array.from(new Set(colaboradores?.map((c) => c.setor).filter(Boolean)));
 
   const getStatusBadge = (ativo: boolean) => {
     if (ativo) {

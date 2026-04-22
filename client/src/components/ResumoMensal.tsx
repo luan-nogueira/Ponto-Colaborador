@@ -36,8 +36,8 @@ export default function ResumoMensal() {
         const snap = await getDocs(q);
         const rows = snap.docs.map(doc => ({
           ...doc.data(),
-          date: doc.data().timestamp.toDate()
-        }));
+          date: (doc.data() as any).timestamp.toDate()
+        } as any));
 
         // Cálculo básico de resumo
         const uniqueDays = new Set(rows.map(r => r.date.toDateString()));
